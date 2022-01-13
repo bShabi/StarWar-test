@@ -1,42 +1,70 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PartOne } from './components/TikalTestPartOne';
 import { PartTwo } from './components/TikalTestPartTwo';
-interface IVehicle {
+import axios from 'axios';
+export interface IVehiclePage {
   next: string;
-  results: [
-    {
-      name?: string;
-      pialot?: string[];
-    }
-  ];
+  results: IVehicle[];
 }
-interface IPepole {
-  homeworld: string;
+export interface IVehicle {
+  name?: string;
+  pilots?: [];
 }
 interface IPlanet {
   population: string;
 }
+interface IPepole {
+  homeworld: string;
+}
+export type VehiclesType = [string, IVehicle];
+//setVehicleResult
+function App() {
+  const [vehicleResult, setVehicleResult] = useState<IVehicle[]>([]);
+  const [loading, setLoading] = useState(false);
 
-const App = (): JSX.Element => {
-  (async () => {
-    let nextPage = 'https://swapi.py4e.com/api/vehicles';
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      const resultVehicle: IVehicle[] = await getVehicleResult(
+        'https://swapi.py4e.com/api/vehicles'
+      );
+      setVehicleResult(resultVehicle);
+      setLoading(true);
+    };
+    fetchVehicle();
+  }, []);
 
-    let vehicles: any = [];
+  const getVehicleResult = async (pathUrl: string) => {
+    var nextUrl = pathUrl;
+    var result: IVehicle[] = [];
 
-    while (nextPage) {
-      const res = await fetch(nextPage);
-      const { next, results } = await res.json();
-      nextPage = next;
-      vehicles = [...vehicles, results];
+    while (nextUrl) {
+      const res = await axios.get<IVehiclePage>(nextUrl);
+      const resData: IVehicle[] = await res.data.results;
+      resData.forEach((elm: IVehicle) => {
+        if (elm.pilots?.length) {
+          result.push(elm);
+        }
+      });
+      nextUrl = res.data.next;
     }
-  })();
+
+    return result;
+  };
+
+  // (async () => {})();
 
   return (
     <div className='App'>
-      <PartOne />
-      <PartTwo />
+      {!loading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <PartOne vehicle={vehicleResult} />
+          <PartTwo />
+        </>
+      )}
     </div>
   );
-};
+}
 
 export default App;
