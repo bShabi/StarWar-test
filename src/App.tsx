@@ -9,27 +9,31 @@ export interface IVehiclePage {
 export interface IVehicle {
   name?: string;
   pilots?: [];
+  population: number;
+  homeworld?: IPlanetPage;
 }
-interface IPlanet {
-  population: string;
+interface IPlanetPage {
+  population: any;
 }
-interface IPepole {
-  homeworld: string;
+interface IPepolePage {
+  homeworld?: string;
 }
-export type VehiclesType = [string, IVehicle];
+export type VehiclesType = [IVehicle];
 //setVehicleResult
 function App() {
   const [vehicleResult, setVehicleResult] = useState<IVehicle[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchVehicle = async () => {
+    async function fetchVehicle() {
       const resultVehicle: IVehicle[] = await getVehicleResult(
         'https://swapi.py4e.com/api/vehicles'
       );
-      setVehicleResult(resultVehicle);
+      const vehiclePopulation: IVehicle[] = await prepeerData(resultVehicle);
+      console.log(vehiclePopulation);
+      setVehicleResult(vehiclePopulation);
       setLoading(true);
-    };
+    }
     fetchVehicle();
   }, []);
 
@@ -50,7 +54,40 @@ function App() {
 
     return result;
   };
+  const prepeerData = async (
+    vehicleResult: IVehicle[]
+  ): Promise<IVehicle[]> => {
+    vehicleResult.map(async (e: IVehicle): Promise<any> => {
+      e.population = 0;
+      var homeworld;
+      e.pilots?.forEach(async (pialotUrl: string) => {
+        homeworld = await prepeerHomeWorldToVehicle(pialotUrl);
+        if (homeworld) {
+          e.population += await reducerPopulation(homeworld);
+        }
+      });
+    });
 
+    return vehicleResult;
+  };
+  const prepeerHomeWorldToVehicle = async (pathUrl: string): Promise<any> => {
+    const res = await axios.get<IPepolePage>(pathUrl);
+    const homeworld = await res.data.homeworld;
+    if (!homeworld) return;
+    return homeworld;
+
+    // const resData: IPepolePage = await res.data.homeworld ;
+    // return resData;
+  };
+  const reducerPopulation = async (pathUrl: string): Promise<number> => {
+    const res = await axios.get<IPlanetPage>(pathUrl);
+    const resData = await res.data.population;
+    if (resData === 'unknown') {
+      return 0;
+    }
+    console.log(Number(resData));
+    return Number(resData);
+  };
   // (async () => {})();
 
   return (
