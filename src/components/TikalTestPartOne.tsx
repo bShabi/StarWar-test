@@ -1,14 +1,13 @@
 import * as React from 'react';
-export const PartOne = (props: any): JSX.Element => {
+import { IVehicle } from '../App';
+export const PartOne = (vehicle: IVehicle) => {
+  React.useEffect(() => {
+    console.log(vehicle);
+  }, [vehicle]);
   return (
-    <div>
-      <table>
-        <tr>Vehicle name with the largest sum [vehicle name]</tr>
-        <tr>
-          Related home planets and their respective population `[name, number]`
-        </tr>
-        <tr>Related pilot names [name]</tr>
-      </table>
-    </div>
+    <>
+      <h1>{vehicle.name}</h1>
+      <h1>{vehicle.population}</h1>
+    </>
   );
 };

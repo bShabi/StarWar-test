@@ -21,7 +21,7 @@ interface IPepolePage {
 export type VehiclesType = [IVehicle];
 //setVehicleResult
 function App() {
-  const [vehicleResult, setVehicleResult] = useState<IVehicle[] | IVehicle>([]);
+  const [vehicleResult, setVehicleResult] = useState<IVehicle>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,6 +33,7 @@ function App() {
       const highestVehicle: IVehicle = await getHightByPopultion(
         vehiclePopulation
       );
+      console.log(highestVehicle);
       setVehicleResult(highestVehicle);
       setLoading(true);
     }
@@ -99,12 +100,13 @@ function App() {
 
   return (
     <>
-      {!loading ? (
+      {!vehicleResult ? (
         <div>Loading...</div>
       ) : (
         <div className='App'>
-          <PartOne vehicle={vehicleResult} />
-          <PartTwo />
+          {vehicleResult.population}
+          {/* <PartOne vehicle={vehicleResult} />
+          <PartTwo /> */}
         </div>
       )}
     </>
