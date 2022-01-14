@@ -21,7 +21,7 @@ interface IPepolePage {
 export type VehiclesType = [IVehicle];
 //setVehicleResult
 function App() {
-  const [vehicleResult, setVehicleResult] = useState<IVehicle[]>([]);
+  const [vehicleResult, setVehicleResult] = useState<IVehicle[] | IVehicle>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,8 +30,10 @@ function App() {
         'https://swapi.py4e.com/api/vehicles'
       );
       const vehiclePopulation: IVehicle[] = await prepeerData(resultVehicle);
-      console.log(vehiclePopulation);
-      setVehicleResult(vehiclePopulation);
+      const highestVehicle: IVehicle = await getHightByPopultion(
+        vehiclePopulation
+      );
+      setVehicleResult(highestVehicle);
       setLoading(true);
     }
     fetchVehicle();
@@ -85,22 +87,27 @@ function App() {
     if (resData === 'unknown') {
       return 0;
     }
-    console.log(Number(resData));
     return Number(resData);
+  };
+
+  const getHightByPopultion = async (vehicles: IVehicle[]) => {
+    return vehicles.reduce(function (prev, current) {
+      return prev.population > current.population ? prev : current;
+    });
   };
   // (async () => {})();
 
   return (
-    <div className='App'>
+    <>
       {!loading ? (
         <div>Loading...</div>
       ) : (
-        <>
+        <div className='App'>
           <PartOne vehicle={vehicleResult} />
           <PartTwo />
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
