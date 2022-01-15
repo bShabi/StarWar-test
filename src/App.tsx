@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FunctionComponent } from 'react';
 import { PartOne } from './components/TikalTestPartOne';
 import { PartTwo } from './components/TikalTestPartTwo';
 import axios from 'axios';
@@ -8,24 +8,33 @@ export interface IVehiclePage {
 }
 export interface IVehicle {
   name?: string;
-  pilots?: [];
+  pilots?: string[];
+  pilotNames?: string[];
   population: number;
-  homeworld?: IPlanetPage;
+  homeworld?: IPlanetPage[];
 }
 interface IPlanetPage {
+  name: string;
   population: any;
 }
 interface IPepolePage {
-  homeworld?: string;
+  name: string;
+  homeworld: string;
 }
 export type VehiclesType = [IVehicle];
 //setVehicleResult
-function App() {
-  const [vehicleResult, setVehicleResult] = useState<IVehicle>();
+const App: FunctionComponent<{ initial?: IVehicle }> = () => {
+  const [vehicleResult, setVehicleResult] = useState<IVehicle | undefined>(
+    undefined
+  );
+  const [bestVehicle, setBestVehicle] = useState<IVehicle>();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (vehicleResult) return;
     async function fetchVehicle() {
+      console.log('in');
+      if (vehicleResult) return;
       const resultVehicle: IVehicle[] = await getVehicleResult(
         'https://swapi.py4e.com/api/vehicles'
       );
@@ -33,12 +42,15 @@ function App() {
       const highestVehicle: IVehicle = await getHightByPopultion(
         vehiclePopulation
       );
-      console.log(highestVehicle);
+      console.log('highestVehicle', highestVehicle);
+      setBestVehicle(highestVehicle);
       setVehicleResult(highestVehicle);
-      setLoading(true);
+      // setLoading(true);
     }
     fetchVehicle();
   }, []);
+
+  (async () => {})();
 
   const getVehicleResult = async (pathUrl: string) => {
     var nextUrl = pathUrl;
@@ -60,14 +72,23 @@ function App() {
   const prepeerData = async (
     vehicleResult: IVehicle[]
   ): Promise<IVehicle[]> => {
-    vehicleResult.map(async (e: IVehicle): Promise<any> => {
-      e.population = 0;
-      var homeworld;
-      e.pilots?.forEach(async (pialotUrl: string) => {
-        homeworld = await prepeerHomeWorldToVehicle(pialotUrl);
-        if (homeworld) {
-          e.population += await reducerPopulation(homeworld);
+    vehicleResult.map(async (vehicle: IVehicle): Promise<any> => {
+      vehicle.population = 0;
+      vehicle.homeworld = [];
+      vehicle.pilotNames = [];
+      vehicle.pilots?.forEach(async (pialotUrl: string) => {
+        var homeWorld: IPepolePage = await prepeerHomeWorldToVehicle(pialotUrl);
+        if (!homeWorld) {
+          return;
         }
+        const homeWorldPage: IPlanetPage = await reducerPopulation(
+          homeWorld.homeworld
+        );
+        console.log('homeWorldPage', homeWorldPage);
+        vehicle.homeworld?.push(homeWorldPage);
+
+        vehicle.population += homeWorldPage.population;
+        vehicle.pilotNames?.push(homeWorld.name);
       });
     });
 
@@ -75,23 +96,27 @@ function App() {
   };
   const prepeerHomeWorldToVehicle = async (pathUrl: string): Promise<any> => {
     const res = await axios.get<IPepolePage>(pathUrl);
-    const homeworld = await res.data.homeworld;
-    if (!homeworld) return;
-    return homeworld;
+    const planetPage: IPepolePage = {
+      name: res.data.name,
+      homeworld: res.data.homeworld,
+    };
+    if (!planetPage.homeworld) return null;
+    return planetPage;
 
     // const resData: IPepolePage = await res.data.homeworld ;
     // return resData;
   };
-  const reducerPopulation = async (pathUrl: string): Promise<number> => {
+  const reducerPopulation = async (pathUrl: string): Promise<IPlanetPage> => {
     const res = await axios.get<IPlanetPage>(pathUrl);
-    const resData = await res.data.population;
-    if (resData === 'unknown') {
-      return 0;
-    }
-    return Number(resData);
+    const homeWorldPage: IPlanetPage = {
+      name: res.data.name,
+      population:
+        res.data.population === 'unknown' ? 0 : Number(res.data.population),
+    };
+    return homeWorldPage;
   };
 
-  const getHightByPopultion = async (vehicles: IVehicle[]) => {
+  const getHightByPopultion = async (vehicles: IVehicle[]): Promise<any> => {
     return vehicles.reduce(function (prev, current) {
       return prev.population > current.population ? prev : current;
     });
@@ -100,17 +125,25 @@ function App() {
 
   return (
     <>
-      {!vehicleResult ? (
+      {!bestVehicle ? (
         <div>Loading...</div>
       ) : (
         <div className='App'>
-          {vehicleResult.population}
+          <h1 onClick={() => console.log(bestVehicle.population)}>Click</h1>
+          <p>name {bestVehicle.name}</p>
+          <p>Population {bestVehicle.population}</p>
+          <p>
+            Related home planets and their respective population{' '}
+            {bestVehicle.population}
+          </p>
+          <p>Population {bestVehicle.population}</p>
+
           {/* <PartOne vehicle={vehicleResult} />
           <PartTwo /> */}
         </div>
       )}
     </>
   );
-}
+};
 
 export default App;
