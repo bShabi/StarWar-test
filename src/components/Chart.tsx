@@ -4,14 +4,24 @@ interface Props {
   planetResult: IPlanetPage[];
 }
 
-export const PartTwo: React.FC<Props> = ({ planetResult }: Props) => {
-  console.log(planetResult);
-
-  const max = 4_500_000_000;
+export const ChartPlanet: React.FC<Props> = ({ planetResult }: Props) => {
+  const [maxValue, setMaxValue] = React.useState<number>(0);
+  React.useEffect(() => {
+    var highest: IPlanetPage = { name: '', population: 0 };
+    var maxValue: number = 0;
+    if (planetResult)
+      planetResult.forEach((planet) => {
+        if (!highest) highest = planet;
+        else if (Number(planet.population) > Number(highest.population))
+          highest = planet;
+      });
+    maxValue = Number(highest.population);
+    setMaxValue(maxValue);
+  }, [planetResult]);
 
   return (
     <>
-      <h1>Part Two - Chart</h1>
+      <h1>Chart</h1>
       <div className='chart'>
         <ul className='bars'>
           {planetResult.map((planet: IPlanetPage, index: number) => (
@@ -19,7 +29,7 @@ export const PartTwo: React.FC<Props> = ({ planetResult }: Props) => {
               <div
                 className='bar'
                 style={{
-                  height: `${(Number(planet.population) / max) * 100}%`,
+                  height: `${(Number(planet.population) / maxValue) * 100}%`,
                 }}
                 data-population={Number(
                   planet.population

@@ -1,6 +1,6 @@
 import { useState, useEffect, FunctionComponent } from 'react';
-import { PartOne } from './components/TikalTestPartOne';
-import { PartTwo } from './components/TikalTestPartTwo';
+import { HighestVehicle } from './components/HighestVehicle';
+import { ChartPlanet } from './components/Chart';
 import axios from 'axios';
 
 export interface IVehiclePage {
@@ -22,7 +22,7 @@ export interface IVehicle {
 
 export interface IPlanetPage {
   name: string;
-  population?: number | any;
+  population: number | string;
 }
 
 export interface IPepolePage {
@@ -44,8 +44,6 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     'Endor',
   ];
 
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (vehicleResult) return;
 
@@ -60,7 +58,6 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
       const highestVehicle: null | IVehicle =
         getByHighestPopulation(vehiclePopulation);
 
-      console.log(highestVehicle);
       setBestVehicle(highestVehicle);
       setVehicleResult(highestVehicle);
       // setLoading(true);
@@ -131,7 +128,7 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
         );
         vehicle.homeworld?.push(homeWorldPage);
 
-        vehicle.population += homeWorldPage.population;
+        vehicle.population += Number(homeWorldPage.population);
         vehicle.pilotNames?.push(homeWorld.name);
       }
     }
@@ -153,6 +150,7 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
   };
   const reducerPopulation = async (pathUrl: string): Promise<IPlanetPage> => {
     const res = await axios.get<IPlanetPage>(pathUrl);
+    const { population, name } = await res.data;
     return {
       name: res.data.name,
       population:
@@ -173,20 +171,7 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
 
     return highest;
   };
-  const printPlanetName = (PlanetName: string): JSX.Element => {
-    return <span>{PlanetName}</span>;
-  };
 
-  const printSquareByPopulation = (population: number): JSX.Element => {
-    return (
-      <span style={{ height: 50, width: 2000, backgroundColor: 'gray' }}>
-        {population}
-      </span>
-    );
-  };
-  const printPlanetPopulation = (population: number): JSX.Element => {
-    return <span>{population}</span>;
-  };
   return (
     <>
       {!bestVehicle ? (
@@ -194,10 +179,10 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
       ) : (
         <>
           <div style={{ textAlign: 'center' }}>
-            <PartOne vehicleResult={bestVehicle} />
+            <HighestVehicle vehicleResult={bestVehicle} />
           </div>
           <div style={{ textAlign: 'center', paddingTop: 50 }}>
-            <PartTwo planetResult={planetResult} />
+            <ChartPlanet planetResult={planetResult} />
           </div>
         </>
       )}
