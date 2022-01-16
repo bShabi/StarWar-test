@@ -62,8 +62,6 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
       // setLoading(true);
     }
     async function fetchPlanets() {
-      if (planetResult) return;
-
       const resultPlanets: IPlanetPage[] = await getPlanetsResultByList(
         'https://swapi.py4e.com/api/planets'
       );
