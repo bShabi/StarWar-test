@@ -45,10 +45,9 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
   ];
 
   useEffect(() => {
-    if (vehicleResult) return;
-
     async function fetchVehicle() {
       if (vehicleResult) return;
+
       const resultVehicle: IVehicle[] = await getVehicleResult(
         'https://swapi.py4e.com/api/vehicles'
       );
@@ -63,6 +62,8 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
       // setLoading(true);
     }
     async function fetchPlanets() {
+      if (planetResult) return;
+
       const resultPlanets: IPlanetPage[] = await getPlanetsResultByList(
         'https://swapi.py4e.com/api/planets'
       );
@@ -72,7 +73,37 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     fetchPlanets();
   }, []);
 
-  const getPlanetsResultByList = async (pathUrl: string) => {
+  /**
+   *Get all vehicels from pathUrl
+   * @param pathUrl
+   * @returns List of vehicles
+   */
+  const getVehicleResult = async (pathUrl: string): Promise<IVehicle[]> => {
+    var nextUrl = pathUrl;
+    var result: IVehicle[] = [];
+
+    while (nextUrl) {
+      const res = await axios.get<IVehiclePage>(nextUrl);
+      const resData: IVehicle[] = await res.data.results;
+      resData.forEach((elm: IVehicle) => {
+        if (elm.pilots?.length) {
+          result.push(elm);
+        }
+      });
+      nextUrl = res.data.next;
+    }
+
+    return result;
+  };
+
+  /**
+   * Get all planets from pathUrl
+   * @param pathUrl
+   * @returns List of planets
+   */
+  const getPlanetsResultByList = async (
+    pathUrl: string
+  ): Promise<IPlanetPage[]> => {
     var nextUrl = pathUrl;
     var result: IPlanetPage[] = [];
 
@@ -91,24 +122,11 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     return result;
   };
 
-  const getVehicleResult = async (pathUrl: string) => {
-    var nextUrl = pathUrl;
-    var result: IVehicle[] = [];
-
-    while (nextUrl) {
-      const res = await axios.get<IVehiclePage>(nextUrl);
-      const resData: IVehicle[] = await res.data.results;
-      resData.forEach((elm: IVehicle) => {
-        if (elm.pilots?.length) {
-          result.push(elm);
-        }
-      });
-      nextUrl = res.data.next;
-    }
-
-    return result;
-  };
-
+  /**
+   * Gets lists of vehicles and sets pialots,homeworld,poplation related to vehicle
+   * @param vehicleResult
+   * @returns  List of vehicles with updated data
+   */
   const prepareData = async (
     vehicleResult: IVehicle[]
   ): Promise<null | IVehicle[]> => {
@@ -134,6 +152,11 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     }
     return vehicleResult;
   };
+  /**
+   * Get pepole url and return that pepole data
+   * @param pathUrl
+   * @returns pepole data
+   */
   const prepareHomeWorldToVehicle = async (
     pathUrl: string
   ): Promise<null | IPepolePage> => {
@@ -144,13 +167,16 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     };
     if (!planetPage.homeworld) return null;
     return planetPage;
-
-    // const resData: IPepolePage = await res.data.homeworld ;
-    // return resData;
   };
+
+  /**
+   * Get planet url and return that planet data
+   * @param pathUrl
+   * @returns planet data
+   */
   const reducerPopulation = async (pathUrl: string): Promise<IPlanetPage> => {
     const res = await axios.get<IPlanetPage>(pathUrl);
-    const { population, name } = await res.data;
+
     return {
       name: res.data.name,
       population:
@@ -158,6 +184,11 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
     };
   };
 
+  /**
+   * Get vehicle with the highest pialots population out of vehicle list
+   * @param vehicles
+   * @returns highest vehicle by popualtion
+   */
   const getByHighestPopulation = (
     vehicles: IVehicle[] | null
   ): null | IVehicle => {
