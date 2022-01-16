@@ -7,6 +7,10 @@ export interface IVehiclePage {
   next: string;
   results: IVehicle[];
 }
+export interface IPlanetPageResult {
+  next: string;
+  results: IPlanetPage[];
+}
 
 export interface IVehicle {
   name?: string;
@@ -16,12 +20,12 @@ export interface IVehicle {
   homeworld?: IPlanetPage[];
 }
 
-interface IPlanetPage {
+export interface IPlanetPage {
   name: string;
-  population: any;
+  population?: number | any;
 }
 
-interface IPepolePage {
+export interface IPepolePage {
   name: string;
   homeworld: string;
 }
@@ -30,7 +34,16 @@ export type VehiclesType = [IVehicle];
 //setVehicleResult
 const App: FunctionComponent<{ initial?: IVehicle }> = () => {
   const [vehicleResult, setVehicleResult] = useState<IVehicle | null>(null);
-  const [bestVehicle, setBestVehicle] = useState<IVehicle | null>(null);
+  const [bestVehicle, setBestVehicle] = useState<IVehicle | null>();
+  const [planetResult, setPlanetResult] = useState<IPlanetPage[]>([]);
+  const listOfPlanets: string[] = [
+    'Tatooine',
+    'Alderaan',
+    'Naboo',
+    'Bespin',
+    'Endor',
+  ];
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,13 +59,40 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
       );
       const highestVehicle: null | IVehicle =
         getByHighestPopulation(vehiclePopulation);
+
+      console.log(highestVehicle);
       setBestVehicle(highestVehicle);
       setVehicleResult(highestVehicle);
       // setLoading(true);
     }
-
+    async function fetchPlanets() {
+      const resultPlanets: IPlanetPage[] = await getPlanetsResultByList(
+        'https://swapi.py4e.com/api/planets'
+      );
+      setPlanetResult(resultPlanets);
+    }
     fetchVehicle();
+    fetchPlanets();
   }, []);
+
+  const getPlanetsResultByList = async (pathUrl: string) => {
+    var nextUrl = pathUrl;
+    var result: IPlanetPage[] = [];
+
+    while (nextUrl) {
+      const res = await axios.get<IPlanetPageResult>(nextUrl);
+      const resData = await res.data.results;
+      resData.forEach((elm: IPlanetPage) => {
+        if (elm.name?.length)
+          if (listOfPlanets.includes(elm.name)) {
+            result.push({ name: elm.name, population: elm.population });
+          }
+      });
+      nextUrl = res.data.next;
+    }
+
+    return result;
+  };
 
   const getVehicleResult = async (pathUrl: string) => {
     var nextUrl = pathUrl;
@@ -133,26 +173,33 @@ const App: FunctionComponent<{ initial?: IVehicle }> = () => {
 
     return highest;
   };
-  // (async () => {})();
+  const printPlanetName = (PlanetName: string): JSX.Element => {
+    return <span>{PlanetName}</span>;
+  };
 
+  const printSquareByPopulation = (population: number): JSX.Element => {
+    return (
+      <span style={{ height: 50, width: 2000, backgroundColor: 'gray' }}>
+        {population}
+      </span>
+    );
+  };
+  const printPlanetPopulation = (population: number): JSX.Element => {
+    return <span>{population}</span>;
+  };
   return (
     <>
       {!bestVehicle ? (
         <div>Loading...</div>
       ) : (
-        <div className='App'>
-          <h1 onClick={() => console.log(bestVehicle.population)}>Click</h1>
-          <p>name {bestVehicle.name}</p>
-          <p>Population {bestVehicle.population}</p>
-          <p>
-            Related home planets and their respective population{' '}
-            {bestVehicle.population}
-          </p>
-          <p>Population {bestVehicle.population}</p>
-
-          {/* <PartOne vehicle={vehicleResult} />
-          <PartTwo /> */}
-        </div>
+        <>
+          <div style={{ textAlign: 'center' }}>
+            <PartOne vehicleResult={bestVehicle} />
+          </div>
+          <div style={{ textAlign: 'center', paddingTop: 50 }}>
+            <PartTwo planetResult={planetResult} />
+          </div>
+        </>
       )}
     </>
   );

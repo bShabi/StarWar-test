@@ -1,12 +1,74 @@
-.App {
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  justify-self: center;
+  align-items: center;
+  background: #fff;
+}
+
+.chart {
+  margin: 20px;
+  padding: 20px;
+  width: 600px;
+  height: 300px;
+  display: inline;
+}
+
+.bars {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  /* background: #555; */
+  margin: 30;
+  padding: 0;
+  display: inline-block;
+  width: 500px;
+  height: 300px;
+  box-shadow: 0 0 10px 0 #555;
+  border-radius: 5px;
+}
+.bars li {
+  display: table-cell;
+  width: 100px;
+  height: 300px;
+  position: relative;
+}
+.bars span {
+  width: 100%;
+  position: absolute;
+  bottom: -30px;
   text-align: center;
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.bars .bar {
+  display: block;
+  background: #17c0eb;
+  margin-top: 10px;
+  width: 50px;
+  height: attr(data-population) '%';
+  position: absolute;
+  bottom: 0;
+  margin-left: 25px;
+  text-align: center;
+  box-shadow: 0 0 10px 0 rgba(23, 192, 235, 0.5);
+  transition: 0.5s;
 }
-
+.bars .bar:hover {
+  background: #55efc4;
+  box-shadow: 0 0 10px 0 rgba(85, 239, 196, 0.5);
+  cursor: pointer;
+}
+.bars .bar:before {
+  color: black;
+  content: attr(data-population);
+  position: relative;
+  bottom: 20px;
+}
+.barItem {
+  color: #fff;
+  position: absolute;
+  bottom: 40px;
+}
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
@@ -22,17 +84,4 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
